@@ -1,0 +1,38 @@
+# --- CLion / JetBrains ---
+.idea/
+# .idea/workspace.xml
+# .idea/shelf/
+
+cmake-build-*/
+build/
+Build/
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile
+compile_commands.json
+
+*.o
+*.obj
+*.exe
+*.dll
+*.so
+*.dylib
+*.lib
+*.a
+.DS_Store
+Thumbs.db
+
+moc_*.cpp
+moc_*.h
+ui_*.h
+qrc_*.cpp
+*.moc
+*.qmlc
+*.jsc
+*.qm
+*.prl
+*_plugin_import.cpp
+
+*.pro.user*
+CMakeLists.txt.user*
