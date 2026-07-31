@@ -8,7 +8,9 @@ find_package(Qt6 COMPONENTS
         Core
         Gui
         Widgets
+        Network
         REQUIRED)
+
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTORCC ON)
@@ -18,12 +20,17 @@ add_executable(QTScanner_network_1
         MainWindow.h
         ui_mainwindow.h
         MainWindow.cpp
+        IPAddressGenerator.h
+        IPAddressGenerator.cpp
+        NetworkScannerWorker.cpp
+
 )
 
 target_link_libraries(QTScanner_network_1 PRIVATE
         Qt6::Core
         Qt6::Gui
         Qt6::Widgets
+        Qt6::Network
 )
 # Проверяем, что это Windows и мы собираем финальное приложение
 if(WIN32)
