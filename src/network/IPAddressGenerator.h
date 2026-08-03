@@ -3,7 +3,6 @@
 #define QTSCANNER_NETWORK_1_IPADDRESSGENERATOR_H
 #include <qstring.h>
 #include <vector>
-#include <QTableWidget>
 
 class IPAddressGenerator {
 private:

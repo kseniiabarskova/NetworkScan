@@ -1,9 +1,10 @@
 #include "MainWindow.h"
 #include "ui_mainwindow.h"
 #include <QDebug>
-#include "IPAddressGenerator.h"
+#include "../network/IPAddressGenerator.h"
 #include <QTableWidget>
 #include <QMessageBox>
+#include "../scanner/NetworkScannerWorker.h"
 
 
 MainWindow::MainWindow(QWidget *parent):QMainWindow(parent), ui(new Ui::MainWindow) {
@@ -50,8 +51,8 @@ void MainWindow::on_scanButton_clicked() {
         row++;
     }
     ui->resultTable->setUpdatesEnabled(true);
-    
-    std::vector<uint16_t> ports;
+
+    std::vector<quint16> ports;
     if (ui->postgreCheckBox->isChecked()) {
         ports.push_back(5432);
     }
@@ -67,11 +68,7 @@ void MainWindow::on_scanButton_clicked() {
     if (ui->redisCheckBox->isChecked()) {
         ports.push_back(6379);
     }
-
-
-
-
-
-
+    NetworkScannerWorker nsw(ipList, ports);
+    nsw.scan();
 
 }

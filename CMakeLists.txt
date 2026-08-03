@@ -17,12 +17,17 @@ set(CMAKE_AUTORCC ON)
 
 add_executable(QTScanner_network_1
         main.cpp
-        MainWindow.h
-        ui_mainwindow.h
-        MainWindow.cpp
-        IPAddressGenerator.h
-        IPAddressGenerator.cpp
-        NetworkScannerWorker.cpp
+        src/gui/MainWindow.h
+        src/gui/ui_mainwindow.h
+        src/gui/MainWindow.cpp
+        src/network/IPAddressGenerator.h
+        src/network/IPAddressGenerator.cpp
+        src/scanner/NetworkScannerWorker.cpp
+        src/scanner/DatabaseFingerprinter.h
+        src/scanner/DatabaseFingerprinter.cpp
+        src/scanner/NetworkScannerWorker.h
+        src/scanner/SocketUtils.h
+        src/scanner/SocketUtils.cpp
 
 )
 

@@ -1,9 +1,7 @@
 
 #include "IPAddressGenerator.h"
 #include <QHostAddress>
-#include <QTableWidget>
 #include <QTableWidgetItem>
-#include <QWidget>
 
 
 bool IPAddressGenerator::isCorrectIP(const QString &ip_address) {
