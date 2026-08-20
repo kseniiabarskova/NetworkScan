@@ -1,98 +1,108 @@
 #include "NetworkScannerWorker.h"
 #include <vector>
 #include <iostream>
+#include <thread>
+#include <chrono>
 #include "SocketUtils.h"
 #include "DatabaseFingerprinter.h"
 
-NetworkScannerWorker::NetworkScannerWorker(const std::vector<QString> &_ipList, const std::vector<quint16> &_ports):ipList(_ipList), ports(_ports){
+NetworkScannerWorker::NetworkScannerWorker(std::vector<QString> _ipList, std::vector<quint16> _ports, bool _rangeMode) : ipList(_ipList), ports(_ports), rangeMode(_rangeMode) {
     bool init = SocketUtils::initialize();
     if (!init) {
         throw std::runtime_error("Failed to initialize sockets");
     }
-
+    currentIp = 0;
+    currentPort = 0;
 }
 
-NetworkScannerWorker::~NetworkScannerWorker()
-{
+NetworkScannerWorker::~NetworkScannerWorker() {
     SocketUtils::cleanup();
 }
-
-
-
-
-SocketHandle NetworkScannerWorker::checkPort(const QString& ip, quint16 port) {
-
-    SocketHandle sock = SocketUtils::createSocket();
-    if (sock == InvalidSocket)
-    {
-        std::cerr << "Failed to create socket\n";
-        return InvalidSocket;
-    }
-
-    sockaddr_in servInfo{};
-    servInfo.sin_family = AF_INET;
-    servInfo.sin_port = htons(port);
-
-    std::string ipStr = ip.toStdString();
-    int erStat = inet_pton(AF_INET,ipStr.c_str(), &servInfo.sin_addr);
-    if (erStat != 1) {
-        std::cout << "Error in IP translation to special numeric format" << std::endl;
-        SocketUtils::closeSocket(sock);
-        return InvalidSocket;
-    }
-
-    int result = connect(sock, reinterpret_cast<sockaddr*>(&servInfo), sizeof(servInfo));
-    if (result != 0) {
-        SocketUtils::closeSocket(sock);
-        return InvalidSocket;
-    }
-    return sock;
+void NetworkScannerWorker::requestStop()
+{
+    stopReq.store(true);
+    stoppedByUser.store(true);
 }
 
 
+bool NetworkScannerWorker::getNextTask(ScanTask &task) {
+    std::lock_guard<std::mutex> lock(mutex);
+    if (currentIp >= ipList.size()) {
+        return false;
+    }
+    task.ip = ipList[currentIp];
+    task.port = ports[currentPort];
 
-void NetworkScannerWorker::scan() {
-    for (const auto& ip : ipList) {
-        for (const auto& port : ports) {
-            SocketHandle sock = checkPort(ip, port);
-            if (sock == InvalidSocket) {
-                continue;
+    ++currentPort;
+    if (currentPort >= ports.size()) {
+        currentPort = 0;
+        ++currentIp;
+    }
+    return true;
+
+}
+
+void NetworkScannerWorker::workerThread() {
+    ScanTask task;
+    while (!stopReq && getNextTask(task)) {
+        SocketHandle sock = SocketUtils::connectToHost(task.ip, task.port);
+        if (sock != InvalidSocket) {
+        auto start = std::chrono::steady_clock::now();
+
+            DatabaseType db;
+            if (rangeMode) {
+                SocketUtils::closeSocket(sock);
+                db = DatabaseFingerprinter::identifyUnknown(task.ip, task.port);
+            }else {
+                db = DatabaseFingerprinter::identify(sock, task.port);
+                SocketUtils::closeSocket(sock);
+
             }
-            DatabaseType db = DatabaseFingerprinter::identify(sock, port);
-            switch (db)
-            {
-                case DatabaseType::MySQL:
-                    std::cout << ip.toStdString() << ":" << port<< " MySQL\n";
-                    break;
+        auto end = std::chrono::steady_clock::now();
+        double responseTime = std::chrono::duration<double, std::milli>(end - start).count();
 
-                case DatabaseType::MariaDB:
-                    std::cout << ip.toStdString()<< ":" << port<< " MariaDB\n";
-                    break;
-
-                case DatabaseType::Redis:
-                    std::cout << ip.toStdString()
-                              << ":" << port
-                              << " Redis\n";
-                    break;
-
-                default:
-                    std::cout << ip.toStdString()
-                              << ":" << port
-                              << " Unknown\n";
-                    break;
+            if (db != DatabaseType::Unknown) {
+                emit databaseFound(task.ip, task.port, db, responseTime);
             }
-
-            SocketUtils::closeSocket(sock);
+        }
+        size_t done = ++completedTask;
+        int perc = static_cast<int>(done*100/totalTasks);
+        std::cout << "Progress =" << perc << std::endl;
+        if (perc != lastPercent.exchange(perc))
+        {
+            emit progressChanged(perc);
         }
     }
 }
 
+bool NetworkScannerWorker::wasStopped() const
+{
+    return stoppedByUser.load();
+}
+void NetworkScannerWorker::scan() {
+    stopReq.store(false);
+    stoppedByUser.store(false);
+    currentIp = 0;
+    currentPort = 0;
+    unsigned int threadCount = std::thread::hardware_concurrency();
 
+    if (threadCount == 0)
+        threadCount = 8;
+    std::vector<std::thread> threads;
+    std::cout << "Threads = " << threadCount << '\n';
+    threads.reserve(threadCount);
+    completedTask = 0;
+    totalTasks = ipList.size() * ports.size();
+    for (int i = 0; i < threadCount; ++i) {
+        threads.emplace_back(&NetworkScannerWorker::workerThread, this);
 
+    }
 
+    for (auto& thread : threads) {
+        thread.join();
+    }
+    emit finished();
 
-
-
-
+}
 
 

@@ -19,19 +19,29 @@ using SocketHandle = int;
 constexpr SocketHandle InvalidSocket = -1;
 
 
-
 #endif
-namespace SocketUtils{
-bool initialize();
-void cleanup();
+namespace SocketUtils {
+    bool initialize();
 
-SocketHandle createSocket();
-void closeSocket(SocketHandle sock);
+    void cleanup();
 
-int lastError();
+    SocketHandle createSocket();
+
+    void closeSocket(SocketHandle sock);
+
+    int lastError();
+
+    bool setNonBlocked(SocketHandle sock);
+    bool waitForConnection(SocketHandle sock);
+
+    bool connectionInProgress();
+
+    bool setBlocking(SocketHandle sock);
+
+    bool setRecvTimeout(SocketHandle sock);
+
+    SocketHandle connectToHost(const QString& ip, quint16 port);
 
 }
 
 #endif
-
-

@@ -32,7 +32,6 @@ bool IPAddressGenerator::isCorrectRangeIP(const QString &ip_address1, const QStr
     quint32 ip2 = addr2.toIPv4Address();
 
     return ip1 <= ip2;
-
 }
 
 std::vector<QString> IPAddressGenerator::generateListIP(const QString &ip_address1, const QString &ip_address2) {

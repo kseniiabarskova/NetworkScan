@@ -6,10 +6,11 @@
 
 class IPAddressGenerator {
 private:
-    static bool isCorrectIP(const QString& ip_address);
     static bool isCorrectRangeIP(const QString& ip_address1, const QString& ip_address2);
 
 public:
+    static bool isCorrectIP(const QString& ip_address);
+
     IPAddressGenerator() = delete;
     static std::vector<QString> generateListIP(const QString& ip_address1, const QString& ip_address2);
 

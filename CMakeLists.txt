@@ -18,8 +18,9 @@ set(CMAKE_AUTORCC ON)
 add_executable(QTScanner_network_1
         main.cpp
         src/gui/MainWindow.h
-        src/gui/ui_mainwindow.h
+
         src/gui/MainWindow.cpp
+        src/gui/mainwindow.ui
         src/network/IPAddressGenerator.h
         src/network/IPAddressGenerator.cpp
         src/scanner/NetworkScannerWorker.cpp
@@ -28,6 +29,15 @@ add_executable(QTScanner_network_1
         src/scanner/NetworkScannerWorker.h
         src/scanner/SocketUtils.h
         src/scanner/SocketUtils.cpp
+        src/network/IPAddressGenerator.cpp
+        src/scanner/DatabaseFingerprinter.cpp
+        src/scanner/DatabaseFingerprinter.cpp
+        src/database/ConnectionManager.h
+        src/database/ConnectionManager.cpp
+        src/database/DatabaseListProvider.cpp
+        src/database/DatabaseListProvider.h
+        src/database/RiskDetector.h
+        src/database/RiskDetector.cpp
 
 )
 
@@ -36,6 +46,7 @@ target_link_libraries(QTScanner_network_1 PRIVATE
         Qt6::Gui
         Qt6::Widgets
         Qt6::Network
+        odbc32
 )
 # Проверяем, что это Windows и мы собираем финальное приложение
 if(WIN32)
